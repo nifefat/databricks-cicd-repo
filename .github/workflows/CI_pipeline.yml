@@ -1,36 +1,42 @@
- name: CI Pipeline for Azure Databricks
+name: CI Pipeline for Azure Databricks
 
- on:
-   push:
-     branches:
-       - main
-   pull_request:
-     branches:
-       - main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
- jobs:
-   deploy:
-     runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-     steps:
-     - name: Checkout code
-       uses: actions/checkout@v3
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-     - name: Set up Python
-       uses: actions/setup-python@v4
-       with:
-         python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-     - name: Install Databricks CLI
-       run: |
-         pip install databricks-cli
+    - name: Install Databricks CLI
+      run: |
+        pip install databricks-cli
 
-     - name: Configure Databricks CLI
-       run: |
-         databricks configure --token <<EOF
-         $
-         $
-         EOF
+    # Debugging step to check if the Databricks host is correctly retrieved
+    - name: Debug Databricks Host
+      run: echo "Databricks Host: ${{ secrets.DATABRICKS_HOST }}"
 
-     - name: Upload sample data to DBFS
-       run: databricks fs cp sample_sales.csv dbfs:/FileStore/sample_sales.csv --overwrite
+    - name: Configure Databricks CLI
+      env:
+        DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      run: |
+        echo "Checking Databricks Host: $DATABRICKS_HOST"
+        databricks configure --host "$DATABRICKS_HOST" --token "$DATABRICKS_TOKEN"
+
+    - name: Upload sample data to DBFS
+      run: databricks fs cp sample_sales.csv dbfs:/FileStore/sample_sales.csv --overwrite
+
